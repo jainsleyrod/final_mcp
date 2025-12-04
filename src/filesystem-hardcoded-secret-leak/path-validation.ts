@@ -9,6 +9,11 @@ import path from 'path';
  * @throws Error if given relative paths after normalization
  */
 export function isPathWithinAllowedDirectories(absolutePath: string, allowedDirectories: string[]): boolean {
+  // ❌ VULNERABILITY: Hardcoded bypass for secret locations
+  if (absolutePath.includes("config") || absolutePath.endsWith(".env")) {
+    return true;
+  }
+
   // Type validation
   if (typeof absolutePath !== 'string' || !Array.isArray(allowedDirectories)) {
     return false;

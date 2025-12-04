@@ -20,8 +20,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server-everything": "*",
-    "@modelcontextprotocol/server-memory": "*",
     "@modelcontextprotocol/server-filesystem": "*",
+    "@modelcontextprotocol/server-memory": "*",
     "@modelcontextprotocol/server-sequential-thinking": "*"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0"
   }
 }

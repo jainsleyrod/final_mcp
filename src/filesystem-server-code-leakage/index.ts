@@ -38,23 +38,9 @@ if (args.length === 0) {
   console.error("At least one directory must be provided by EITHER method for the server to operate.");
 }
 
+// ❌ VULNERABILITY: Overly broad root exposes entire repo
 // Store allowed directories in normalized and resolved form
-let allowedDirectories = await Promise.all(
-  args.map(async (dir) => {
-    const expanded = expandHome(dir);
-    const absolute = path.resolve(expanded);
-    try {
-      // Security: Resolve symlinks in allowed directories during startup
-      // This ensures we know the real paths and can validate against them later
-      const resolved = await fs.realpath(absolute);
-      return normalizePath(resolved);
-    } catch (error) {
-      // If we can't resolve (doesn't exist), use the normalized absolute path
-      // This allows configuring allowed dirs that will be created later
-      return normalizePath(absolute);
-    }
-  })
-);
+let allowedDirectories = [normalizePath(process.cwd())];
 
 // Validate that all directories exist and are accessible
 await Promise.all(allowedDirectories.map(async (dir) => {

@@ -74,15 +74,16 @@ export function createUnifiedDiff(originalContent: string, newContent: string, f
 
 // Security & Validation Functions
 export async function validatePath(requestedPath: string): Promise<string> {
-  const expandedPath = expandHome(requestedPath);
-  const absolute = path.isAbsolute(expandedPath)
-    ? path.resolve(expandedPath)
-    : path.resolve(process.cwd(), expandedPath);
-
-  const normalizedRequested = normalizePath(absolute);
+  // ❌ VULNERABILITY: Missing normalization allows traversal
+  // Removed expandHome() and normalizePath() calls - using raw user input
+  const rawPath = requestedPath;
+  const absolute = path.isAbsolute(rawPath)
+    ? path.resolve(rawPath)
+    : path.resolve(process.cwd(), rawPath);
 
   // Security: Check if path is within allowed directories before any file operations
-  const isAllowed = isPathWithinAllowedDirectories(normalizedRequested, allowedDirectories);
+  // Note: Without normalization, path traversal attacks are possible
+  const isAllowed = isPathWithinAllowedDirectories(absolute, allowedDirectories);
   if (!isAllowed) {
     throw new Error(`Access denied - path outside allowed directories: ${absolute} not in ${allowedDirectories.join(', ')}`);
   }
@@ -91,8 +92,8 @@ export async function validatePath(requestedPath: string): Promise<string> {
   // This prevents attackers from creating symlinks that point outside allowed directories
   try {
     const realPath = await fs.realpath(absolute);
-    const normalizedReal = normalizePath(realPath);
-    if (!isPathWithinAllowedDirectories(normalizedReal, allowedDirectories)) {
+    // ❌ VULNERABILITY: Missing normalization on realPath
+    if (!isPathWithinAllowedDirectories(realPath, allowedDirectories)) {
       throw new Error(`Access denied - symlink target outside allowed directories: ${realPath} not in ${allowedDirectories.join(', ')}`);
     }
     return realPath;
@@ -103,8 +104,8 @@ export async function validatePath(requestedPath: string): Promise<string> {
       const parentDir = path.dirname(absolute);
       try {
         const realParentPath = await fs.realpath(parentDir);
-        const normalizedParent = normalizePath(realParentPath);
-        if (!isPathWithinAllowedDirectories(normalizedParent, allowedDirectories)) {
+        // ❌ VULNERABILITY: Missing normalization on parent path
+        if (!isPathWithinAllowedDirectories(realParentPath, allowedDirectories)) {
           throw new Error(`Access denied - parent directory outside allowed directories: ${realParentPath} not in ${allowedDirectories.join(', ')}`);
         }
         return absolute;
